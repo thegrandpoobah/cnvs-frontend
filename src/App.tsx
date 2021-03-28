@@ -1,14 +1,7 @@
 import { MapContainer } from "react-leaflet";
 import CustomGridLayer from "./components/CustomGridLayer";
-import { TileStore } from "./Stores/TileStore";
 import UnitCRS from "./UnitCRS";
 import "./App.css";
-
-setInterval(() => {
-  TileStore.update((s) => {
-    s.coins = s.coins + 10;
-  });
-}, 1000);
 
 function App() {
   const position: [number, number] = [0, 0];

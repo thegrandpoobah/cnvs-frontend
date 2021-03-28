@@ -3,7 +3,7 @@ import "./CustomTile.css";
 
 interface CustomTileProps {
   coords: Coords;
-  coins: number;
+  coins?: number;
 }
 
 function CustomTile({ coins, coords }: CustomTileProps) {
