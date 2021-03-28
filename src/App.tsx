@@ -1,7 +1,14 @@
-import { CRS } from "leaflet";
-import React from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer } from "react-leaflet";
+import CustomGridLayer from "./CustomGridLayer";
+import { TileStore } from "./Stores/TileStore";
+import UnitCRS from "./UnitCRS";
 import "./App.css";
+
+setInterval(() => {
+  TileStore.update((s) => {
+    s.coins = s.coins + 10;
+  });
+}, 1000);
 
 function App() {
   const position: [number, number] = [0, 0];
@@ -14,13 +21,13 @@ function App() {
         minZoom={0}
         maxZoom={0}
         zoomControl={false}
-        crs={CRS.Simple}
+        crs={UnitCRS}
         maxBounds={[
           [-10, -10],
           [10, 10],
         ]}
       >
-        <TileLayer url="http://localhost:3001/{z}/{x}/{y}.png" tileSize={64} />
+        <CustomGridLayer tileSize={64} />
       </MapContainer>
     </div>
   );
