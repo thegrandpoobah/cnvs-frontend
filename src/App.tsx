@@ -1,5 +1,5 @@
 import { MapContainer } from "react-leaflet";
-import CustomGridLayer from "./CustomGridLayer";
+import CustomGridLayer from "./components/CustomGridLayer";
 import { TileStore } from "./Stores/TileStore";
 import UnitCRS from "./UnitCRS";
 import "./App.css";

@@ -5,24 +5,14 @@ import {
   Coords,
   LeafletMouseEvent,
   LeafletEvent,
-  Point,
 } from "leaflet";
 import { useLeafletContext } from "@react-leaflet/core";
-import CustomTile from "../CustomTile";
 import { useEffect, useRef } from "react";
 import { useMapEvents } from "react-leaflet";
+import CustomTile from "../CustomTile";
+import ZoomlessCoord from "../../utils/ZoomlessCoord";
 
 interface CustomGridLayerOptions extends GridLayerOptions {}
-
-class CustomCoord extends Point {
-  z: number;
-
-  constructor(x: number, y: number, z: number) {
-    super(x, y);
-
-    this.z = z;
-  }
-}
 
 class CustomGridLayerComponent extends GridLayer {
   createTile(coords: Coords): HTMLElement {
@@ -65,7 +55,7 @@ function CustomGridLayer(props: CustomGridLayerOptions) {
       }
 
       (layerRef.current as CustomGridLayerComponent).updateTile(
-        new CustomCoord(
+        new ZoomlessCoord(
           Math.trunc(event.latlng.lng),
           Math.trunc(event.latlng.lat),
           0
