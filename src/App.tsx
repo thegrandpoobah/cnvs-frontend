@@ -16,8 +16,8 @@ function App() {
         zoomControl={false}
         crs={UnitCRS}
         maxBounds={[
-          [-10, -10],
-          [10, 10],
+          [-100, -100],
+          [100, 100],
         ]}
       >
         <CustomGridLayer tileSize={64} />

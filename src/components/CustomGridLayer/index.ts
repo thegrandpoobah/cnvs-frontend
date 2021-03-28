@@ -67,8 +67,6 @@ function CustomGridLayer(props: CustomGridLayerOptions) {
   // const propsRef = useRef(props);
 
   useEffect(() => {
-    loadTileState(context.map.getBounds());
-
     layerRef.current = new CustomGridLayerComponent(props);
     const container = context.layerContainer || context.map;
     container.addLayer(layerRef.current);
@@ -76,12 +74,13 @@ function CustomGridLayer(props: CustomGridLayerOptions) {
     const unsubscribe = TileStore.subscribe(
       (s) => s,
       (newState) => {
-        console.log("running updates");
         newState.forEach((v, k) => {
           layerRef.current?.updateTile(v);
         });
       }
     );
+
+    loadTileState(context.map.getBounds());
 
     return () => {
       unsubscribe();
