@@ -1,20 +1,19 @@
-import { Coords } from "leaflet";
 import "./CustomTile.css";
+import { TileData } from "../../types/TileData";
 
-interface CustomTileProps {
-  coords: Coords;
-  coins?: number;
-}
-
-function CustomTile({ coins, coords }: CustomTileProps) {
+function CustomTile({ coins, hovered, coords }: TileData) {
   return (
     <div
       className="cnvs-tile"
       style={{
         backgroundImage: `url('http://localhost:3001/${coords.z}/${coords.x}/${coords.y}.png')`,
+        border: hovered ? "1px solid red" : "inherit",
       }}
     >
-      {coins} doge
+      <div>{coins} doge</div>
+      <div>
+        {coords.x} : {coords.y}
+      </div>
     </div>
   );
 }

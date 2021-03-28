@@ -8,11 +8,12 @@ import {
   LatLngBounds,
 } from "leaflet";
 import { useLeafletContext } from "@react-leaflet/core";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useMapEvents } from "react-leaflet";
 import CustomTile from "../CustomTile";
 import ZoomlessCoord from "../../utils/ZoomlessCoord";
-import { TileStore } from "../../Stores/TileStore";
+import { TileStore } from "../../stores/TileStore";
+import { TileData } from "../../types/TileData";
 
 interface CustomGridLayerOptions extends GridLayerOptions {}
 
@@ -25,14 +26,20 @@ class CustomGridLayerComponent extends GridLayer {
     return tileElement;
   }
 
-  updateTile(coords: Coords, coins: number | undefined) {
+  updateTile(props: TileData) {
     /* this depends on some implementation details in leaflet, but ce la vie */
-    const key = this._tileCoordsToKey(coords);
+    const key = this._tileCoordsToKey(props.coords);
 
-    const tileElement = this._tiles[key].el;
+    if (this._tiles[key]) {
+      const tileElement = this._tiles[key].el;
 
-    ReactDOM.render(CustomTile({ coins: coins, coords: coords }), tileElement);
+      ReactDOM.render(CustomTile(props), tileElement);
+    }
   }
+}
+
+function key(lat: number, lng: number) {
+  return `0:${lat}:${lng}`;
 }
 
 function loadTileState(bounds: LatLngBounds) {
@@ -44,10 +51,10 @@ function loadTileState(bounds: LatLngBounds) {
 
     for (let x = Math.floor(se.lat); x <= Math.ceil(nw.lat); x++) {
       for (let y = Math.floor(nw.lng); y <= Math.ceil(se.lng); y++) {
-        s.set(`0:${x}:${y}`, {
-          coins: Math.floor(Math.random() * 100),
+        s.set(key(x, y), {
+          coins: Math.floor(Math.random() * 1000),
           hovered: false,
-          coords: new ZoomlessCoord(x, y, 0),
+          coords: new ZoomlessCoord(y, x, 0),
         });
       }
     }
@@ -59,16 +66,6 @@ function CustomGridLayer(props: CustomGridLayerOptions) {
   const layerRef = useRef<CustomGridLayerComponent>();
   // const propsRef = useRef(props);
 
-  const [lastHover, setLastHover] = useState<{
-    lat: number | undefined;
-    lng: number | undefined;
-  }>({
-    lat: undefined,
-    lng: undefined,
-  });
-
-  const tileStore = TileStore.useState();
-
   useEffect(() => {
     loadTileState(context.map.getBounds());
 
@@ -76,7 +73,18 @@ function CustomGridLayer(props: CustomGridLayerOptions) {
     const container = context.layerContainer || context.map;
     container.addLayer(layerRef.current);
 
+    const unsubscribe = TileStore.subscribe(
+      (s) => s,
+      (newState) => {
+        console.log("running updates");
+        newState.forEach((v, k) => {
+          layerRef.current?.updateTile(v);
+        });
+      }
+    );
+
     return () => {
+      unsubscribe();
       container.removeLayer(layerRef.current as GridLayer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,32 +92,23 @@ function CustomGridLayer(props: CustomGridLayerOptions) {
 
   useMapEvents({
     mousemove: function (event: LeafletMouseEvent) {
-      if (!layerRef.current) {
-        return;
-      }
+      TileStore.update((s) => {
+        s.forEach((v, k) => {
+          v.hovered = false;
+        });
 
-      const component = layerRef.current as CustomGridLayerComponent;
+        const lat = Math.floor(event.latlng.lat);
+        const lng = Math.floor(event.latlng.lng);
 
-      const lat = Math.trunc(event.latlng.lat);
-      const lng = Math.trunc(event.latlng.lng);
-
-      if (lastHover.lat !== lat || lastHover.lng !== lng) {
-        // we moved to a different tile, turn off the hover state
-        // component.updateTile(new ZoomlessCoord(lng, lat, 0), coins);
-        console.log("we went to a different tile");
-      }
-
-      setLastHover({
-        lat: lat,
-        lng: lng,
+        const k = key(lat, lng);
+        if (s.has(k)) {
+          const v = s.get(k) as TileData;
+          v.hovered = true;
+        }
       });
-
-      const coinCount = tileStore.get(`0:${lat}:${lng}`)?.coins;
-
-      component.updateTile(new ZoomlessCoord(lng, lat, 0), coinCount);
     },
     moveend: function (event: LeafletEvent) {
-      console.log(context.map.getBounds());
+      loadTileState(context.map.getBounds());
     },
   });
 
